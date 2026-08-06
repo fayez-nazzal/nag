@@ -1,0 +1,19 @@
+{
+  "name": "nag",
+  "version": "0.1.0",
+  "description": "Persistent reminders that keep coming back until you acknowledge them, and survive a reboot.",
+  "type": "module",
+  "bin": {
+    "nag": "src/cli.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "start": "bun run src/cli.ts",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
