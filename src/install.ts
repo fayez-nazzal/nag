@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { homedir, userInfo } from "node:os";
 import { dirname, join } from "node:path";
 import { formatDuration } from "./reminder.ts";
-import { ensureDirs, logsDir } from "./store.ts";
+import { ensureDirs, logsDir, rootDir } from "./store.ts";
 
 export const AGENT_LABEL = "local.nag";
 
@@ -145,6 +145,10 @@ function updateZshrc(transform: (content: string) => string, rcPath: string): bo
 
 export function runInstall(intervalSeconds: number, rcPath: string = zshrcPath()): string[] {
   ensureDirs();
+  const legacyLocksDir = join(rootDir(), "locks");
+  if (existsSync(legacyLocksDir)) {
+    rmSync(legacyLocksDir, { recursive: true, force: true });
+  }
   const cliPath = join(import.meta.dir, "cli.ts");
   const options = defaultPlistOptions(process.execPath, cliPath, intervalSeconds);
   const path = agentPlistPath();

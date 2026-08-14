@@ -1,91 +1,42 @@
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import type { Reminder } from "./reminder.ts";
 
-export const DIALOG_TIMEOUT_SECONDS = 604800;
-
-export const BUTTON_LATER = "Remind me later";
-export const BUTTON_ACKNOWLEDGE = "I have handled it";
-export const BUTTON_OPEN = "Open";
-
-export type DialogAction = "open" | "later" | "acknowledge" | "none";
+export const DIALOG_TIMEOUT_SECONDS = 3600;
 
 export function escapeAppleScript(text: string): string {
   return text.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
-export function dialogButtons(reminder: Reminder): string[] {
-  const buttons = [BUTTON_LATER, BUTTON_ACKNOWLEDGE];
+export function dialogMessage(reminder: Reminder): string {
+  let message = reminder.message;
   if (reminder.page !== null) {
-    buttons.push(BUTTON_OPEN);
+    message = `${message}\n\nOpen: ${reminder.page}`;
   }
-  return buttons;
-}
-
-export function defaultButton(reminder: Reminder): string {
-  let button = BUTTON_ACKNOWLEDGE;
-  if (reminder.page !== null) {
-    button = BUTTON_OPEN;
-  }
-  return button;
+  return message;
 }
 
 export function buildDialogScript(reminder: Reminder): string {
-  const buttons = dialogButtons(reminder)
-    .map((button) => `"${escapeAppleScript(button)}"`)
-    .join(", ");
   const title = escapeAppleScript(reminder.title);
-  const message = escapeAppleScript(reminder.message);
-  const chosen = escapeAppleScript(defaultButton(reminder));
+  const message = escapeAppleScript(dialogMessage(reminder));
   return [
     'tell application "System Events"',
     "  activate",
     `  with timeout of ${DIALOG_TIMEOUT_SECONDS} seconds`,
-    `    set answer to button returned of (display dialog "${message}" with title "${title}" buttons {${buttons}} default button "${chosen}" with icon caution)`,
+    `    display dialog "${message}" with title "${title}" buttons {"OK"} default button "OK" with icon caution`,
     "  end timeout",
     "end tell",
-    "return answer",
   ].join("\n");
 }
 
-export function buildNotificationScript(reminder: Reminder): string {
-  const title = escapeAppleScript(reminder.title);
-  const message = escapeAppleScript(reminder.message.split("\n")[0]!);
-  return `display notification "${message}" with title "${title}" sound name "Glass"`;
-}
-
-export function actionForButton(button: string): DialogAction {
-  let action: DialogAction = "none";
-  if (button === BUTTON_OPEN) {
-    action = "open";
-  } else if (button === BUTTON_ACKNOWLEDGE) {
-    action = "acknowledge";
-  } else if (button === BUTTON_LATER) {
-    action = "later";
-  }
-  return action;
-}
-
-export function runOsascript(script: string): string {
-  const result = spawnSync("/usr/bin/osascript", ["-"], {
-    input: script,
-    encoding: "utf8",
+export function runOsascript(script: string): void {
+  const child = spawn("/usr/bin/osascript", ["-"], {
+    stdio: ["pipe", "ignore", "ignore"],
+    detached: true,
   });
-  let output = "";
-  if (typeof result.stdout === "string") {
-    output = result.stdout.trim();
-  }
-  return output;
+  child.stdin.end(script);
+  child.unref();
 }
 
-export function openPage(page: string): void {
-  spawnSync("/usr/bin/open", [page], { stdio: "ignore" });
-}
-
-export function showNotification(reminder: Reminder): void {
-  runOsascript(buildNotificationScript(reminder));
-}
-
-export function showDialog(reminder: Reminder): DialogAction {
-  const button = runOsascript(buildDialogScript(reminder));
-  return actionForButton(button);
+export function showDialog(reminder: Reminder): void {
+  runOsascript(buildDialogScript(reminder));
 }

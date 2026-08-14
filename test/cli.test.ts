@@ -53,7 +53,7 @@ describe("add", () => {
     const reminder = loadReminder("sprint");
     expect(reminder?.title).toBe("Sprint input is overdue");
     expect(reminder?.everySeconds).toBe(600);
-    expect(reminder?.channels).toEqual(["dialog", "notification", "terminal"]);
+    expect(reminder?.channels).toEqual(["dialog", "terminal"]);
     expect(reminder?.page).toBeNull();
     expect(reminder?.acknowledgedAt).toBeNull();
   });
@@ -124,5 +124,18 @@ describe("banner", () => {
     expect(run(["banner"])).toContain("nag ack sprint");
     run(["ack", "sprint"]);
     expect(run(["banner"])).toBe("");
+  });
+});
+
+describe("fire and dispatch", () => {
+  test("fire refires a reminder immediately, ignoring the schedule", () => {
+    run(ADD_ARGS);
+    expect(run(["fire", "sprint"])).toBe("fired sprint");
+    expect(loadReminder("sprint")?.lastFiredAt).not.toBeNull();
+  });
+
+  test("dispatch reports how many reminders it fired", () => {
+    run(ADD_ARGS);
+    expect(run(["dispatch"])).toBe("fired 1");
   });
 });

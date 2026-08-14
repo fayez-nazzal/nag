@@ -160,13 +160,13 @@ function commandBanner(): string {
 
 function commandDispatch(): string {
   const result = dispatch(new Date());
-  return `fired ${result.fired.length}, already showing ${result.locked.length}`;
+  return `fired ${result.fired.length}`;
 }
 
 function commandFire(id: string): string {
   const reminder = requireReminder(id);
-  const action = fireReminder(reminder, new Date());
-  return `fired ${id}, answer was ${action}`;
+  fireReminder(reminder, new Date());
+  return `fired ${id}`;
 }
 
 function commandAck(id: string): string {

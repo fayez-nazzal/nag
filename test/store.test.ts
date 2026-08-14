@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ALL_CHANNELS, type Reminder } from "../src/reminder.ts";
@@ -111,5 +111,12 @@ describe("tolerant listing", () => {
     const result = listReminders();
     expect(result.reminders.map((reminder) => reminder.id)).toEqual(["alpha"]);
     expect(result.unreadable).toEqual(["broken.json"]);
+  });
+});
+
+describe("no more lock files", () => {
+  test("ensureDirs no longer creates a locks directory", () => {
+    saveReminder(makeReminder("alpha"));
+    expect(existsSync(join(home, "locks"))).toBe(false);
   });
 });

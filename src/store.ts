@@ -26,10 +26,6 @@ export function remindersDir(): string {
   return join(rootDir(), "reminders");
 }
 
-export function locksDir(): string {
-  return join(rootDir(), "locks");
-}
-
 export function logsDir(): string {
   return join(rootDir(), "logs");
 }
@@ -42,13 +38,8 @@ export function reminderPath(id: string): string {
   return join(remindersDir(), `${validateId(id)}.json`);
 }
 
-export function lockPath(id: string): string {
-  return join(locksDir(), `${id}.lock`);
-}
-
 export function ensureDirs(): void {
   mkdirSync(remindersDir(), { recursive: true });
-  mkdirSync(locksDir(), { recursive: true });
   mkdirSync(logsDir(), { recursive: true });
 }
 

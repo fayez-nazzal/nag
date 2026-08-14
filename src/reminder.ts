@@ -1,4 +1,4 @@
-export type Channel = "dialog" | "notification" | "terminal";
+export type Channel = "dialog" | "terminal";
 
 export type Reminder = {
   id: string;
@@ -13,7 +13,7 @@ export type Reminder = {
   createdAt: string;
 };
 
-export const ALL_CHANNELS: Channel[] = ["dialog", "notification", "terminal"];
+export const ALL_CHANNELS: Channel[] = ["dialog", "terminal"];
 
 export const DEFAULT_EVERY_SECONDS = 600;
 

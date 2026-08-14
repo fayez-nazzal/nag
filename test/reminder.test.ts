@@ -82,7 +82,7 @@ describe("parseChannels", () => {
   });
 
   test("ignores spacing and case", () => {
-    expect(parseChannels(" Dialog , NOTIFICATION ")).toEqual(["dialog", "notification"]);
+    expect(parseChannels(" Dialog , TERMINAL ")).toEqual(["dialog", "terminal"]);
   });
 
   test("rejects an unknown channel", () => {

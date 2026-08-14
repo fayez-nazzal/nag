@@ -1,16 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-  BUTTON_ACKNOWLEDGE,
-  BUTTON_LATER,
-  BUTTON_OPEN,
-  DIALOG_TIMEOUT_SECONDS,
-  actionForButton,
-  buildDialogScript,
-  buildNotificationScript,
-  defaultButton,
-  dialogButtons,
-  escapeAppleScript,
-} from "../src/deliver.ts";
+import { DIALOG_TIMEOUT_SECONDS, buildDialogScript, dialogMessage, escapeAppleScript } from "../src/deliver.ts";
 import { ALL_CHANNELS, type Reminder } from "../src/reminder.ts";
 
 function makeReminder(overrides: Partial<Reminder> = {}): Reminder {
@@ -40,28 +29,15 @@ describe("escapeAppleScript", () => {
   });
 });
 
-describe("dialog buttons", () => {
-  test("offers Open only when a page is attached", () => {
-    expect(dialogButtons(makeReminder())).toEqual([BUTTON_LATER, BUTTON_ACKNOWLEDGE]);
-    expect(dialogButtons(makeReminder({ page: "/tmp/page.html" }))).toEqual([
-      BUTTON_LATER,
-      BUTTON_ACKNOWLEDGE,
-      BUTTON_OPEN,
-    ]);
-  });
-
-  test("never exceeds the three buttons AppleScript allows", () => {
-    expect(dialogButtons(makeReminder({ page: "/tmp/page.html" })).length).toBeLessThanOrEqual(3);
-  });
-
-  test("defaults to Open when there is a page", () => {
-    expect(defaultButton(makeReminder())).toBe(BUTTON_ACKNOWLEDGE);
-    expect(defaultButton(makeReminder({ page: "/tmp/page.html" }))).toBe(BUTTON_OPEN);
+describe("dialogMessage", () => {
+  test("carries the page as text in the dialog body instead of a button", () => {
+    expect(dialogMessage(makeReminder())).not.toContain("Open:");
+    expect(dialogMessage(makeReminder({ page: "/tmp/page.html" }))).toContain("Open: /tmp/page.html");
   });
 });
 
 describe("buildDialogScript", () => {
-  test("wraps the dialog in a long timeout", () => {
+  test("wraps the dialog in a bounded timeout", () => {
     const script = buildDialogScript(makeReminder());
     expect(script).toContain(`with timeout of ${DIALOG_TIMEOUT_SECONDS} seconds`);
     expect(script).toContain("end timeout");
@@ -69,6 +45,12 @@ describe("buildDialogScript", () => {
 
   test("keeps the timeout well past the 120 second Apple Event default", () => {
     expect(DIALOG_TIMEOUT_SECONDS).toBeGreaterThan(120);
+  });
+
+  test("offers a single OK button", () => {
+    const script = buildDialogScript(makeReminder());
+    expect(script).toContain('buttons {"OK"}');
+    expect(script).toContain('default button "OK"');
   });
 
   test("carries the title and message", () => {
@@ -81,25 +63,5 @@ describe("buildDialogScript", () => {
     const script = buildDialogScript(makeReminder({ title: 'Bad" & (do shell script "rm -rf /") & "' }));
     expect(script).not.toContain('with title "Bad" &');
     expect(script).toContain('\\"');
-  });
-});
-
-describe("buildNotificationScript", () => {
-  test("uses only the first line of the message", () => {
-    const script = buildNotificationScript(makeReminder());
-    expect(script).toContain("First line");
-    expect(script).not.toContain("Second line");
-  });
-});
-
-describe("actionForButton", () => {
-  test("maps every button", () => {
-    expect(actionForButton(BUTTON_OPEN)).toBe("open");
-    expect(actionForButton(BUTTON_ACKNOWLEDGE)).toBe("acknowledge");
-    expect(actionForButton(BUTTON_LATER)).toBe("later");
-  });
-
-  test("treats an empty answer as no action, which is what a killed dialog returns", () => {
-    expect(actionForButton("")).toBe("none");
   });
 });
