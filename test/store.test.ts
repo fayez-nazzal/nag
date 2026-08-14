@@ -66,11 +66,11 @@ describe("store", () => {
   test("lists reminders sorted by id", () => {
     saveReminder(makeReminder("beta"));
     saveReminder(makeReminder("alpha"));
-    expect(listReminders().map((reminder) => reminder.id)).toEqual(["alpha", "beta"]);
+    expect(listReminders().reminders.map((reminder) => reminder.id)).toEqual(["alpha", "beta"]);
   });
 
   test("lists nothing before anything is saved", () => {
-    expect(listReminders()).toEqual([]);
+    expect(listReminders()).toEqual({ reminders: [], unreadable: [] });
   });
 
   test("removes a reminder and reports whether it was there", () => {
@@ -101,5 +101,15 @@ describe("path traversal guard", () => {
     expect(() => removeReminder("../sentinel-should-survive")).toThrow(/Invalid id/);
     expect(readFileSync(sentinel, "utf8")).toBe("keep me");
     rmSync(sentinel, { force: true });
+  });
+});
+
+describe("tolerant listing", () => {
+  test("a store containing an unreadable file still lists the good ones and names the bad file", () => {
+    saveReminder(makeReminder("alpha"));
+    writeFileSync(reminderPath("broken"), "not json");
+    const result = listReminders();
+    expect(result.reminders.map((reminder) => reminder.id)).toEqual(["alpha"]);
+    expect(result.unreadable).toEqual(["broken.json"]);
   });
 });

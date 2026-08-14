@@ -1,4 +1,13 @@
-import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { validateId } from "./reminder.ts";
@@ -45,7 +54,10 @@ export function ensureDirs(): void {
 
 export function saveReminder(reminder: Reminder): void {
   ensureDirs();
-  writeFileSync(reminderPath(reminder.id), `${JSON.stringify(reminder, null, 2)}\n`);
+  const path = reminderPath(reminder.id);
+  const tempPath = `${path}.tmp-${process.pid}-${Date.now()}`;
+  writeFileSync(tempPath, `${JSON.stringify(reminder, null, 2)}\n`);
+  renameSync(tempPath, path);
 }
 
 export function loadReminder(id: string): Reminder | null {
@@ -57,18 +69,28 @@ export function loadReminder(id: string): Reminder | null {
   return reminder;
 }
 
-export function listReminders(): Reminder[] {
+export type ListedReminders = {
+  reminders: Reminder[];
+  unreadable: string[];
+};
+
+export function listReminders(): ListedReminders {
   const dir = remindersDir();
   const reminders: Reminder[] = [];
+  const unreadable: string[] = [];
   if (existsSync(dir)) {
     const names = readdirSync(dir)
       .filter((name) => name.endsWith(".json"))
       .sort();
     for (const name of names) {
-      reminders.push(JSON.parse(readFileSync(join(dir, name), "utf8")) as Reminder);
+      try {
+        reminders.push(JSON.parse(readFileSync(join(dir, name), "utf8")) as Reminder);
+      } catch {
+        unreadable.push(name);
+      }
     }
   }
-  return reminders;
+  return { reminders, unreadable };
 }
 
 export function removeReminder(id: string): boolean {

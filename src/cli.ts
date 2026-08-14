@@ -135,7 +135,7 @@ function commandAdd(values: Record<string, unknown>): string {
 
 function commandList(): string {
   const now = new Date();
-  const reminders = listReminders();
+  const { reminders, unreadable } = listReminders();
   let output = "no reminders";
   if (reminders.length > 0) {
     output = reminders
@@ -148,11 +148,14 @@ function commandList(): string {
       })
       .join("\n");
   }
+  if (unreadable.length > 0) {
+    output = `${output}\nunreadable: ${unreadable.join(", ")}`;
+  }
   return output;
 }
 
 function commandBanner(): string {
-  return renderBanner(listReminders());
+  return renderBanner(listReminders().reminders);
 }
 
 function commandDispatch(): string {

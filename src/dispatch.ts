@@ -86,7 +86,7 @@ export function fireReminder(reminder: Reminder, now: Date, deliverer: Deliverer
 export function dispatch(now: Date, deliverer: Deliverer = systemDeliverer): DispatchResult {
   ensureDirs();
   const result: DispatchResult = { fired: [], locked: [] };
-  for (const reminder of listReminders()) {
+  for (const reminder of listReminders().reminders) {
     if (isDue(reminder, now)) {
       if (isLocked(reminder.id)) {
         result.locked.push(reminder.id);

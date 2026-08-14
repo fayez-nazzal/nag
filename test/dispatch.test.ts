@@ -14,7 +14,7 @@ import {
   type Deliverer,
 } from "../src/dispatch.ts";
 import { ALL_CHANNELS, type Reminder } from "../src/reminder.ts";
-import { lockPath, loadReminder, saveReminder } from "../src/store.ts";
+import { lockPath, loadReminder, reminderPath, saveReminder } from "../src/store.ts";
 
 let home = "";
 let previousHome: string | undefined;
@@ -189,5 +189,16 @@ describe("dispatch", () => {
 
   test("fires nothing when the store is empty", () => {
     expect(dispatch(now, makeRecorder()).fired).toEqual([]);
+  });
+});
+
+describe("dispatch tolerates a bad store file", () => {
+  const now = new Date("2026-08-06T12:00:00.000Z");
+
+  test("fires the good reminders and ignores the unreadable one instead of throwing", () => {
+    saveReminder(makeReminder({ id: "due" }));
+    writeFileSync(reminderPath("broken"), "not json");
+    const result = dispatch(now, makeRecorder());
+    expect(result.fired).toEqual(["due"]);
   });
 });
