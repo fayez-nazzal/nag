@@ -129,13 +129,13 @@ describe("banner", () => {
 
 describe("fire and dispatch", () => {
   test("fire refires a reminder immediately, ignoring the schedule", () => {
-    run(ADD_ARGS);
+    run([...ADD_ARGS, "--channel", "terminal"]);
     expect(run(["fire", "sprint"])).toBe("fired sprint");
     expect(loadReminder("sprint")?.lastFiredAt).not.toBeNull();
   });
 
   test("dispatch reports how many reminders it fired", () => {
-    run(ADD_ARGS);
+    run([...ADD_ARGS, "--channel", "terminal"]);
     expect(run(["dispatch"])).toBe("fired 1");
   });
 });

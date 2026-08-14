@@ -126,6 +126,8 @@ function commandAdd(values: Record<string, unknown>): string {
     everySeconds,
     startAt,
     lastFiredAt: null,
+    lastDeliveredAt: null,
+    lastDeliveryError: null,
     acknowledgedAt: null,
     createdAt: now.toISOString(),
   };

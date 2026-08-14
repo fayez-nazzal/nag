@@ -9,6 +9,8 @@ export type Reminder = {
   everySeconds: number;
   startAt: string | null;
   lastFiredAt: string | null;
+  lastDeliveredAt: string | null;
+  lastDeliveryError: string | null;
   acknowledgedAt: string | null;
   createdAt: string;
 };

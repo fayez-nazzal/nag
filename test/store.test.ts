@@ -27,6 +27,8 @@ function makeReminder(id: string): Reminder {
     everySeconds: 600,
     startAt: null,
     lastFiredAt: null,
+    lastDeliveredAt: null,
+    lastDeliveryError: null,
     acknowledgedAt: null,
     createdAt: "2026-08-06T00:00:00.000Z",
   };

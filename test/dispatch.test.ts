@@ -18,6 +18,7 @@ function makeRecorder(): Recorder {
     dialogs: [],
     showDialog: (reminder) => {
       recorder.dialogs.push(reminder.id);
+      return { status: 0, stdout: "", stderr: "" };
     },
   };
   return recorder;
@@ -33,6 +34,8 @@ function makeReminder(overrides: Partial<Reminder> = {}): Reminder {
     everySeconds: 600,
     startAt: null,
     lastFiredAt: null,
+    lastDeliveredAt: null,
+    lastDeliveryError: null,
     acknowledgedAt: null,
     createdAt: "2026-08-06T00:00:00.000Z",
     ...overrides,
@@ -103,6 +106,7 @@ describe("dispatch", () => {
     const recorder: Deliverer = {
       showDialog: () => {
         dialogStillOpen = true;
+        return { status: 0, stdout: "", stderr: "" };
       },
     };
     saveReminder(makeReminder({ id: "sample" }));
@@ -132,9 +136,39 @@ describe("mid-dialog removal", () => {
     const recorder: Deliverer = {
       showDialog: (target) => {
         removeReminder(target.id);
+        return { status: 0, stdout: "", stderr: "" };
       },
     };
     fireReminder(reminder, now, recorder);
     expect(loadReminder("sample")).toBeNull();
+  });
+});
+
+describe("delivery verification", () => {
+  const now = new Date("2026-08-06T12:00:00.000Z");
+
+  test("a Screen stub returning a failed status reports delivery-failed and leaves lastDeliveredAt null", () => {
+    const reminder = makeReminder({ id: "sample" });
+    saveReminder(reminder);
+    const failing: Deliverer = {
+      showDialog: () => ({ status: 1, stdout: "", stderr: "user canceled" }),
+    };
+    fireReminder(reminder, now, failing);
+    const stored = loadReminder("sample");
+    expect(stored?.lastFiredAt).toBe(now.toISOString());
+    expect(stored?.lastDeliveredAt).toBeNull();
+    expect(stored?.lastDeliveryError).toBe("user canceled");
+  });
+
+  test("a Screen stub returning a success status records lastDeliveredAt and clears the error", () => {
+    const reminder = makeReminder({ id: "sample" });
+    saveReminder(reminder);
+    const succeeding: Deliverer = {
+      showDialog: () => ({ status: 0, stdout: "", stderr: "" }),
+    };
+    fireReminder(reminder, now, succeeding);
+    const stored = loadReminder("sample");
+    expect(stored?.lastDeliveredAt).toBe(now.toISOString());
+    expect(stored?.lastDeliveryError).toBeNull();
   });
 });

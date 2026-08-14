@@ -1,10 +1,10 @@
-import { showDialog } from "./deliver.ts";
+import { showDialog, type OsascriptResult } from "./deliver.ts";
 import type { Reminder } from "./reminder.ts";
 import { isDue } from "./reminder.ts";
-import { appendLog, ensureDirs, listReminders, saveReminder } from "./store.ts";
+import { appendLog, ensureDirs, listReminders, loadReminder, saveReminder } from "./store.ts";
 
 export type Deliverer = {
-  showDialog: (reminder: Reminder) => void;
+  showDialog: (reminder: Reminder) => OsascriptResult;
 };
 
 export type DispatchResult = {
@@ -15,11 +15,31 @@ export const systemDeliverer: Deliverer = {
   showDialog,
 };
 
+function applyDeliveryOutcome(reminder: Reminder, outcome: OsascriptResult, now: Date): void {
+  let deliveredAt: string | null = null;
+  let deliveryError: string | null = null;
+  if (outcome.status === 0) {
+    deliveredAt = now.toISOString();
+  } else {
+    let error = outcome.stderr;
+    if (error.length === 0) {
+      error = `osascript exited with status ${outcome.status}`;
+    }
+    deliveryError = error;
+  }
+  reminder.lastDeliveredAt = deliveredAt;
+  reminder.lastDeliveryError = deliveryError;
+}
+
 export function fireReminder(reminder: Reminder, now: Date, deliverer: Deliverer = systemDeliverer): void {
   reminder.lastFiredAt = now.toISOString();
   saveReminder(reminder);
   if (reminder.channels.includes("dialog")) {
-    deliverer.showDialog(reminder);
+    const outcome = deliverer.showDialog(reminder);
+    applyDeliveryOutcome(reminder, outcome, now);
+    if (loadReminder(reminder.id) !== null) {
+      saveReminder(reminder);
+    }
   }
 }
 

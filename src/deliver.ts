@@ -1,7 +1,13 @@
-import { spawn } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import type { Reminder } from "./reminder.ts";
 
 export const DIALOG_TIMEOUT_SECONDS = 3600;
+
+export type OsascriptResult = {
+  status: number;
+  stdout: string;
+  stderr: string;
+};
 
 export function escapeAppleScript(text: string): string {
   return text.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
@@ -28,15 +34,26 @@ export function buildDialogScript(reminder: Reminder): string {
   ].join("\n");
 }
 
-export function runOsascript(script: string): void {
-  const child = spawn("/usr/bin/osascript", ["-"], {
-    stdio: ["pipe", "ignore", "ignore"],
-    detached: true,
+export function runOsascript(script: string): OsascriptResult {
+  const result = spawnSync("/usr/bin/osascript", ["-"], {
+    input: script,
+    encoding: "utf8",
   });
-  child.stdin.end(script);
-  child.unref();
+  let status = 1;
+  if (typeof result.status === "number") {
+    status = result.status;
+  }
+  let stdout = "";
+  if (typeof result.stdout === "string") {
+    stdout = result.stdout.trim();
+  }
+  let stderr = "";
+  if (typeof result.stderr === "string") {
+    stderr = result.stderr.trim();
+  }
+  return { status, stdout, stderr };
 }
 
-export function showDialog(reminder: Reminder): void {
-  runOsascript(buildDialogScript(reminder));
+export function showDialog(reminder: Reminder): OsascriptResult {
+  return runOsascript(buildDialogScript(reminder));
 }

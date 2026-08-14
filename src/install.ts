@@ -126,6 +126,31 @@ export function removeZshrcBlock(content: string): string {
   return result;
 }
 
+export type CommandResult = {
+  status: number;
+  stdout: string;
+  stderr: string;
+};
+
+export type CommandRunner = (bin: string, args: string[]) => CommandResult;
+
+export const systemCommandRunner: CommandRunner = (bin, args) => {
+  const result = spawnSync(bin, args, { encoding: "utf8" });
+  let status = 1;
+  if (typeof result.status === "number") {
+    status = result.status;
+  }
+  let stdout = "";
+  if (typeof result.stdout === "string") {
+    stdout = result.stdout;
+  }
+  let stderr = "";
+  if (typeof result.stderr === "string") {
+    stderr = result.stderr;
+  }
+  return { status, stdout, stderr };
+};
+
 function domainTarget(): string {
   return `gui/${userInfo().uid}/${AGENT_LABEL}`;
 }
@@ -143,7 +168,12 @@ function updateZshrc(transform: (content: string) => string, rcPath: string): bo
   return changed;
 }
 
-export function runInstall(intervalSeconds: number, rcPath: string = zshrcPath()): string[] {
+export function runInstall(
+  intervalSeconds: number,
+  rcPath: string = zshrcPath(),
+  plistPath: string = agentPlistPath(),
+  runner: CommandRunner = systemCommandRunner,
+): string[] {
   ensureDirs();
   const legacyLocksDir = join(rootDir(), "locks");
   if (existsSync(legacyLocksDir)) {
@@ -151,17 +181,15 @@ export function runInstall(intervalSeconds: number, rcPath: string = zshrcPath()
   }
   const cliPath = join(import.meta.dir, "cli.ts");
   const options = defaultPlistOptions(process.execPath, cliPath, intervalSeconds);
-  const path = agentPlistPath();
-  mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, buildPlist(options));
-  spawnSync("/bin/launchctl", ["bootout", domainTarget()], { stdio: "ignore" });
-  const loaded = spawnSync("/bin/launchctl", ["bootstrap", `gui/${userInfo().uid}`, path], { encoding: "utf8" });
-  const notes = [`agent written to ${path}`];
-  if (loaded.status === 0) {
-    notes.push(`agent loaded, dispatcher wakes every ${formatDuration(intervalSeconds)}`);
-  } else {
-    notes.push(`agent could not be loaded: ${String(loaded.stderr).trim()}`);
+  mkdirSync(dirname(plistPath), { recursive: true });
+  writeFileSync(plistPath, buildPlist(options));
+  runner("/bin/launchctl", ["bootout", domainTarget()]);
+  const loaded = runner("/bin/launchctl", ["bootstrap", `gui/${userInfo().uid}`, plistPath]);
+  if (loaded.status !== 0) {
+    throw new Error(`agent could not be loaded: ${loaded.stderr.trim()}`);
   }
+  const notes = [`agent written to ${plistPath}`];
+  notes.push(`agent loaded, dispatcher wakes every ${formatDuration(intervalSeconds)}`);
   if (updateZshrc(addZshrcBlock, rcPath)) {
     notes.push(`banner line added to ${rcPath}`);
   } else {
@@ -170,13 +198,16 @@ export function runInstall(intervalSeconds: number, rcPath: string = zshrcPath()
   return notes;
 }
 
-export function runUninstall(rcPath: string = zshrcPath()): string[] {
-  const path = agentPlistPath();
+export function runUninstall(
+  rcPath: string = zshrcPath(),
+  plistPath: string = agentPlistPath(),
+  runner: CommandRunner = systemCommandRunner,
+): string[] {
   const notes: string[] = [];
-  spawnSync("/bin/launchctl", ["bootout", domainTarget()], { stdio: "ignore" });
-  if (existsSync(path)) {
-    rmSync(path);
-    notes.push(`agent unloaded and ${path} removed`);
+  runner("/bin/launchctl", ["bootout", domainTarget()]);
+  if (existsSync(plistPath)) {
+    rmSync(plistPath);
+    notes.push(`agent unloaded and ${plistPath} removed`);
   } else {
     notes.push("agent was not installed");
   }

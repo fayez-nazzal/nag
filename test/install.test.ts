@@ -12,6 +12,7 @@ import {
   buildZshrcBlock,
   hasZshrcBlock,
   removeZshrcBlock,
+  runInstall,
   type PlistOptions,
 } from "../src/install.ts";
 
@@ -116,6 +117,35 @@ describe("zshrc block against a temp file", () => {
     const updated = readFileSync(rcPath, "utf8");
     expect(updated).toContain("export A=1");
     expect(updated).not.toContain(ZSHRC_BEGIN);
+    rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe("runInstall reports a bootstrap failure as a failure", () => {
+  test("a CommandRunner stub returning a failed status makes runInstall throw instead of reporting success", () => {
+    const dir = mkdtempSync(join(tmpdir(), "nag-install-"));
+    const rcPath = join(dir, "zshrc-fixture");
+    const plistPath = join(dir, "agent.plist");
+    process.env.NAG_HOME = join(dir, "home");
+    const failingRunner = () => {
+      return { status: 1, stdout: "", stderr: "service could not be loaded" };
+    };
+    expect(() => runInstall(60, rcPath, plistPath, failingRunner)).toThrow(/service could not be loaded/);
+    delete process.env.NAG_HOME;
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  test("a CommandRunner stub returning success lets runInstall report the agent loaded", () => {
+    const dir = mkdtempSync(join(tmpdir(), "nag-install-"));
+    const rcPath = join(dir, "zshrc-fixture");
+    const plistPath = join(dir, "agent.plist");
+    process.env.NAG_HOME = join(dir, "home");
+    const succeedingRunner = () => {
+      return { status: 0, stdout: "", stderr: "" };
+    };
+    const notes = runInstall(60, rcPath, plistPath, succeedingRunner);
+    expect(notes.join("\n")).toContain("agent loaded");
+    delete process.env.NAG_HOME;
     rmSync(dir, { recursive: true, force: true });
   });
 });
