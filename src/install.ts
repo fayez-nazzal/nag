@@ -103,40 +103,47 @@ export function addZshrcBlock(content: string): string {
 }
 
 export function removeZshrcBlock(content: string): string {
-  const lines = content.split("\n");
-  const kept: string[] = [];
-  let inside = false;
-  for (const line of lines) {
-    if (line.trim() === ZSHRC_BEGIN) {
-      inside = true;
-    } else if (line.trim() === ZSHRC_END) {
-      inside = false;
-    } else if (!inside) {
-      kept.push(line);
+  let result = content;
+  const beginIndex = content.indexOf(ZSHRC_BEGIN);
+  if (beginIndex !== -1) {
+    const endIndex = content.indexOf(ZSHRC_END, beginIndex);
+    if (endIndex !== -1) {
+      const lines = content.split("\n");
+      const kept: string[] = [];
+      let inside = false;
+      for (const line of lines) {
+        if (line.trim() === ZSHRC_BEGIN) {
+          inside = true;
+        } else if (line.trim() === ZSHRC_END) {
+          inside = false;
+        } else if (!inside) {
+          kept.push(line);
+        }
+      }
+      result = kept.join("\n");
     }
   }
-  return kept.join("\n");
+  return result;
 }
 
 function domainTarget(): string {
   return `gui/${userInfo().uid}/${AGENT_LABEL}`;
 }
 
-function updateZshrc(transform: (content: string) => string): boolean {
-  const path = zshrcPath();
+function updateZshrc(transform: (content: string) => string, rcPath: string): boolean {
   let content = "";
-  if (existsSync(path)) {
-    content = readFileSync(path, "utf8");
+  if (existsSync(rcPath)) {
+    content = readFileSync(rcPath, "utf8");
   }
   const updated = transform(content);
   const changed = updated !== content;
   if (changed) {
-    writeFileSync(path, updated);
+    writeFileSync(rcPath, updated);
   }
   return changed;
 }
 
-export function runInstall(intervalSeconds: number): string[] {
+export function runInstall(intervalSeconds: number, rcPath: string = zshrcPath()): string[] {
   ensureDirs();
   const cliPath = join(import.meta.dir, "cli.ts");
   const options = defaultPlistOptions(process.execPath, cliPath, intervalSeconds);
@@ -151,15 +158,15 @@ export function runInstall(intervalSeconds: number): string[] {
   } else {
     notes.push(`agent could not be loaded: ${String(loaded.stderr).trim()}`);
   }
-  if (updateZshrc(addZshrcBlock)) {
-    notes.push(`banner line added to ${zshrcPath()}`);
+  if (updateZshrc(addZshrcBlock, rcPath)) {
+    notes.push(`banner line added to ${rcPath}`);
   } else {
-    notes.push(`banner line already present in ${zshrcPath()}`);
+    notes.push(`banner line already present in ${rcPath}`);
   }
   return notes;
 }
 
-export function runUninstall(): string[] {
+export function runUninstall(rcPath: string = zshrcPath()): string[] {
   const path = agentPlistPath();
   const notes: string[] = [];
   spawnSync("/bin/launchctl", ["bootout", domainTarget()], { stdio: "ignore" });
@@ -169,10 +176,10 @@ export function runUninstall(): string[] {
   } else {
     notes.push("agent was not installed");
   }
-  if (updateZshrc(removeZshrcBlock)) {
-    notes.push(`banner line removed from ${zshrcPath()}`);
+  if (updateZshrc(removeZshrcBlock, rcPath)) {
+    notes.push(`banner line removed from ${rcPath}`);
   } else {
-    notes.push(`no banner line found in ${zshrcPath()}`);
+    notes.push(`no banner line found in ${rcPath}`);
   }
   return notes;
 }

@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   AGENT_LABEL,
   ZSHRC_BEGIN,
@@ -80,5 +83,39 @@ describe("zshrc block", () => {
 
   test("removing from a file that never had it changes nothing meaningful", () => {
     expect(removeZshrcBlock("alias l=ls")).toBe("alias l=ls");
+  });
+});
+
+describe("removeZshrcBlock truncation guard", () => {
+  test("keeps every line after a missing END marker", () => {
+    const content = "alias l=ls\n# >>> nag banner >>>\nnag banner\nexport A=1\n";
+    expect(removeZshrcBlock(content)).toContain("export A=1");
+  });
+
+  test("leaves content untouched, trailing newline included, when END is missing", () => {
+    const content = "alias l=ls\n# >>> nag banner >>>\nnag banner\nexport A=1\n";
+    expect(removeZshrcBlock(content)).toBe(content);
+  });
+
+  test("still strips the block cleanly when both markers are present", () => {
+    const content = "alias l=ls\n# >>> nag banner >>>\nnag banner\n# <<< nag banner <<<\nexport A=1\n";
+    const cleaned = removeZshrcBlock(content);
+    expect(cleaned).toContain("export A=1");
+    expect(cleaned).not.toContain(ZSHRC_BEGIN);
+  });
+});
+
+describe("zshrc block against a temp file", () => {
+  test("adds then removes the block on a throwaway file, never the real home directory", () => {
+    const dir = mkdtempSync(join(tmpdir(), "nag-rc-"));
+    const rcPath = join(dir, "zshrc-fixture");
+    writeFileSync(rcPath, "export A=1\n");
+    writeFileSync(rcPath, addZshrcBlock(readFileSync(rcPath, "utf8")));
+    expect(readFileSync(rcPath, "utf8")).toContain(ZSHRC_BEGIN);
+    writeFileSync(rcPath, removeZshrcBlock(readFileSync(rcPath, "utf8")));
+    const updated = readFileSync(rcPath, "utf8");
+    expect(updated).toContain("export A=1");
+    expect(updated).not.toContain(ZSHRC_BEGIN);
+    rmSync(dir, { recursive: true, force: true });
   });
 });
