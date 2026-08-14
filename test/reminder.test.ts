@@ -10,7 +10,7 @@ import {
   parseStartAt,
   validateId,
   type Reminder,
-} from "../src/reminder.ts";
+} from "../src/obligation/reminder.ts";
 
 function makeReminder(overrides: Partial<Reminder> = {}): Reminder {
   return {

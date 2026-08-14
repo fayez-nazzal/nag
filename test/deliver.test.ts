@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { DIALOG_TIMEOUT_SECONDS, buildDialogScript, dialogMessage, escapeAppleScript } from "../src/deliver.ts";
-import { ALL_CHANNELS, type Reminder } from "../src/reminder.ts";
+import { DIALOG_TIMEOUT_SECONDS, buildDialogScript, dialogMessage, escapeAppleScript } from "../src/alert/screen.ts";
+import { ALL_CHANNELS, type Reminder } from "../src/obligation/reminder.ts";
 
 function makeReminder(overrides: Partial<Reminder> = {}): Reminder {
   return {

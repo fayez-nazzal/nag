@@ -3,8 +3,8 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { VERSION, run } from "../src/cli.ts";
-import type { NagError } from "../src/result.ts";
-import { loadReminder } from "../src/store.ts";
+import type { NagError } from "../src/result/envelope.ts";
+import { loadReminder } from "../src/ledger/records.ts";
 
 let home = "";
 let previousHome: string | undefined;

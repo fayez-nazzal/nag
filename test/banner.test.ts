@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { bannerLines, pendingForBanner, renderBanner } from "../src/banner.ts";
-import { ALL_CHANNELS, type Reminder } from "../src/reminder.ts";
+import { bannerLines, pendingForBanner, renderBanner } from "../src/banner/banner.ts";
+import { ALL_CHANNELS, type Reminder } from "../src/obligation/reminder.ts";
 
 function makeReminder(overrides: Partial<Reminder> = {}): Reminder {
   return {

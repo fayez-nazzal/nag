@@ -1,4 +1,4 @@
-import { EXIT_CODE, NagError } from "./result.ts";
+import { EXIT_CODE, NagError } from "@nag/result/envelope.ts";
 
 export type Channel = "dialog" | "terminal";
 

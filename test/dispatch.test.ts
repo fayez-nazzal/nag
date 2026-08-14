@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { dispatch, fireReminder, type Deliverer } from "../src/dispatch.ts";
-import { ALL_CHANNELS, type Reminder } from "../src/reminder.ts";
-import { loadReminder, reminderPath, removeReminder, saveReminder } from "../src/store.ts";
+import { dispatch, fireReminder, type Deliverer } from "../src/dispatch/run.ts";
+import { ALL_CHANNELS, type Reminder } from "../src/obligation/reminder.ts";
+import { loadReminder, reminderPath, removeReminder, saveReminder } from "../src/ledger/records.ts";
 
 let home = "";
 let previousHome: string | undefined;

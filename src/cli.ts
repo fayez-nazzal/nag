@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 
 import { parseArgs } from "node:util";
-import { renderBanner } from "./banner.ts";
-import { dispatch, fireReminder } from "./dispatch.ts";
-import { DEFAULT_DISPATCH_INTERVAL_SECONDS, runInstall, runUninstall } from "./install.ts";
+import { renderBanner } from "@nag/banner/banner.ts";
+import { dispatch, fireReminder } from "@nag/dispatch/run.ts";
+import { DEFAULT_DISPATCH_INTERVAL_SECONDS, runInstall, runUninstall } from "@nag/installation/apply.ts";
 import {
   ALL_CHANNELS,
   DEFAULT_EVERY_SECONDS,
@@ -15,9 +15,9 @@ import {
   parseStartAt,
   validateId,
   type Reminder,
-} from "./reminder.ts";
-import { buildEnvelope, EXIT_CODE, NagError, type Envelope, type ExitCode } from "./result.ts";
-import { listReminders, loadReminder, removeReminder, saveReminder } from "./store.ts";
+} from "@nag/obligation/reminder.ts";
+import { buildEnvelope, EXIT_CODE, NagError, type Envelope, type ExitCode } from "@nag/result/envelope.ts";
+import { listReminders, loadReminder, removeReminder, saveReminder } from "@nag/ledger/records.ts";
 
 export const VERSION = "0.1.0";
 

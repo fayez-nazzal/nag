@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -14,7 +14,7 @@ import {
   removeZshrcBlock,
   runInstall,
   type PlistOptions,
-} from "../src/install.ts";
+} from "../src/installation/apply.ts";
 
 function makeOptions(overrides: Partial<PlistOptions> = {}): PlistOptions {
   return {
@@ -147,5 +147,30 @@ describe("runInstall reports a bootstrap failure as a failure", () => {
     expect(notes.join("\n")).toContain("agent loaded");
     delete process.env.NAG_HOME;
     rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe("runInstall resolves cliPath relative to src, not to installation/", () => {
+  test("the plist it writes points at a cli.ts that actually exists on disk", () => {
+    const dir = mkdtempSync(join(tmpdir(), "nag-cli-path-"));
+    const rcPath = join(dir, "zshrc-fixture");
+    const plistPath = join(dir, "agent.plist");
+    process.env.NAG_HOME = join(dir, "home");
+    const succeedingRunner = () => {
+      return { status: 0, stdout: "", stderr: "" };
+    };
+    runInstall(60, rcPath, plistPath, succeedingRunner);
+    const plist = readFileSync(plistPath, "utf8");
+    const match = /<string>([^<]*cli\.ts)<\/string>/.exec(plist);
+    expect(match).not.toBeNull();
+    expect(existsSync(match![1]!)).toBe(true);
+    delete process.env.NAG_HOME;
+    rmSync(dir, { recursive: true, force: true });
+  });
+});
+
+describe("AGENT_LABEL matches the running launchd agent", () => {
+  test("AGENT_LABEL is io.fayez.nag, the only plist that actually exists on disk", () => {
+    expect(AGENT_LABEL).toBe("io.fayez.nag");
   });
 });

@@ -1,5 +1,5 @@
-import type { Reminder } from "./reminder.ts";
-import { isAcknowledged } from "./reminder.ts";
+import type { Reminder } from "@nag/obligation/reminder.ts";
+import { isAcknowledged } from "@nag/obligation/reminder.ts";
 
 const HIGHLIGHT = "\u001b[1;41m";
 const RESET = "\u001b[0m";

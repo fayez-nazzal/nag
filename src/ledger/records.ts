@@ -10,8 +10,8 @@ import {
 } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { validateId } from "./reminder.ts";
-import type { Reminder } from "./reminder.ts";
+import { validateId } from "@nag/obligation/reminder.ts";
+import type { Reminder } from "@nag/obligation/reminder.ts";
 
 export function rootDir(): string {
   let root = join(homedir(), ".nag");

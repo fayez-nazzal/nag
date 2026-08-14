@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { ALL_CHANNELS, type Reminder } from "../src/reminder.ts";
+import { ALL_CHANNELS, type Reminder } from "../src/obligation/reminder.ts";
 import {
   appendLog,
   listReminders,
@@ -12,7 +12,7 @@ import {
   removeReminder,
   rootDir,
   saveReminder,
-} from "../src/store.ts";
+} from "../src/ledger/records.ts";
 
 let home = "";
 let previousHome: string | undefined;

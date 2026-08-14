@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import type { Reminder } from "./reminder.ts";
+import type { Reminder } from "@nag/obligation/reminder.ts";
 
 export const DIALOG_TIMEOUT_SECONDS = 3600;
 

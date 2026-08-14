@@ -1,7 +1,7 @@
-import { showDialog, type OsascriptResult } from "./deliver.ts";
-import type { Reminder } from "./reminder.ts";
-import { isDue } from "./reminder.ts";
-import { appendLog, ensureDirs, listReminders, loadReminder, saveReminder } from "./store.ts";
+import { showDialog, type OsascriptResult } from "@nag/alert/screen.ts";
+import type { Reminder } from "@nag/obligation/reminder.ts";
+import { isDue } from "@nag/obligation/reminder.ts";
+import { appendLog, ensureDirs, listReminders, loadReminder, saveReminder } from "@nag/ledger/records.ts";
 
 export type Deliverer = {
   showDialog: (reminder: Reminder) => OsascriptResult;

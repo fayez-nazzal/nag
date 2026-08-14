@@ -2,10 +2,10 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, userInfo } from "node:os";
 import { dirname, join } from "node:path";
-import { formatDuration } from "./reminder.ts";
-import { ensureDirs, logsDir, rootDir } from "./store.ts";
+import { formatDuration } from "@nag/obligation/reminder.ts";
+import { ensureDirs, logsDir, rootDir } from "@nag/ledger/records.ts";
 
-export const AGENT_LABEL = "local.nag";
+export const AGENT_LABEL = "io.fayez.nag";
 
 export const DEFAULT_DISPATCH_INTERVAL_SECONDS = 60;
 
@@ -179,7 +179,7 @@ export function runInstall(
   if (existsSync(legacyLocksDir)) {
     rmSync(legacyLocksDir, { recursive: true, force: true });
   }
-  const cliPath = join(import.meta.dir, "cli.ts");
+  const cliPath = join(import.meta.dir, "..", "cli.ts");
   const options = defaultPlistOptions(process.execPath, cliPath, intervalSeconds);
   mkdirSync(dirname(plistPath), { recursive: true });
   writeFileSync(plistPath, buildPlist(options));
