@@ -1,3 +1,5 @@
+import { EXIT_CODE, NagError } from "./result.ts";
+
 export type Channel = "dialog" | "terminal";
 
 export type Reminder = {
@@ -42,7 +44,7 @@ export function parseDuration(text: string): number {
     seconds = amount * SECONDS_PER_UNIT[unit]!;
   }
   if (seconds <= 0) {
-    throw new Error(`Invalid duration "${text}". Use forms like 45s, 10m, 2h, 1d.`);
+    throw new NagError(EXIT_CODE.invalidInput, `Invalid duration "${text}". Use forms like 45s, 10m, 2h, 1d.`);
   }
   return seconds;
 }
@@ -67,7 +69,7 @@ export function parseStartAt(text: string, now: Date): string {
   } else {
     const parsed = Date.parse(text);
     if (Number.isNaN(parsed)) {
-      throw new Error(`Invalid start time "${text}". Use an ISO date or an offset like +30m.`);
+      throw new NagError(EXIT_CODE.invalidInput, `Invalid start time "${text}". Use an ISO date or an offset like +30m.`);
     }
     startedAt = new Date(parsed).toISOString();
   }
@@ -81,17 +83,17 @@ export function parseChannels(text: string): Channel[] {
     .filter((part) => part.length > 0);
   const unknown = requested.filter((part) => !ALL_CHANNELS.includes(part as Channel));
   if (unknown.length > 0) {
-    throw new Error(`Unknown channel "${unknown[0]}". Known channels: ${ALL_CHANNELS.join(", ")}.`);
+    throw new NagError(EXIT_CODE.invalidInput, `Unknown channel "${unknown[0]}". Known channels: ${ALL_CHANNELS.join(", ")}.`);
   }
   if (requested.length === 0) {
-    throw new Error("No channels given.");
+    throw new NagError(EXIT_CODE.invalidInput, "No channels given.");
   }
   return requested as Channel[];
 }
 
 export function validateId(id: string): string {
   if (!ID_PATTERN.test(id)) {
-    throw new Error(`Invalid id "${id}". Use lower case letters, digits, dot, dash, underscore.`);
+    throw new NagError(EXIT_CODE.invalidInput, `Invalid id "${id}". Use lower case letters, digits, dot, dash, underscore.`);
   }
   return id;
 }

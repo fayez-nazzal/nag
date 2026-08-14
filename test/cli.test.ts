@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { VERSION, run } from "../src/cli.ts";
+import type { NagError } from "../src/result.ts";
 import { loadReminder } from "../src/store.ts";
 
 let home = "";
@@ -101,10 +102,10 @@ describe("list, show, ack, remove", () => {
     expect(JSON.parse(run(["show", "sprint"])).id).toBe("sprint");
   });
 
-  test("removes a reminder and says so when it was not there", () => {
+  test("removes a reminder, and complains the same way ack does when it was not there", () => {
     run(ADD_ARGS);
     expect(run(["remove", "sprint"])).toBe("removed sprint");
-    expect(run(["remove", "sprint"])).toContain("no reminder");
+    expect(() => run(["remove", "sprint"])).toThrow(/No reminder/);
   });
 
   test("complains about an id that does not exist", () => {
@@ -137,5 +138,79 @@ describe("fire and dispatch", () => {
   test("dispatch reports how many reminders it fired", () => {
     run([...ADD_ARGS, "--channel", "terminal"]);
     expect(run(["dispatch"])).toBe("fired 1");
+  });
+});
+
+describe("add-conflict", () => {
+  test("refuses to overwrite an existing unacknowledged reminder without --replace", () => {
+    run(ADD_ARGS);
+    const before = loadReminder("sprint");
+    expect(() => run(ADD_ARGS)).toThrow(/already exists/);
+    expect(loadReminder("sprint")?.createdAt).toBe(before?.createdAt);
+  });
+
+  test("--replace lets a fresh add overwrite it", () => {
+    run(ADD_ARGS);
+    expect(() => run([...ADD_ARGS, "--replace", "--title", "Updated"])).not.toThrow();
+    expect(loadReminder("sprint")?.title).toBe("Updated");
+  });
+
+  test("an acknowledged reminder can be re-added without --replace", () => {
+    run(ADD_ARGS);
+    run(["ack", "sprint"]);
+    expect(() => run(ADD_ARGS)).not.toThrow();
+  });
+});
+
+describe("--json envelope", () => {
+  test("every command parses as JSON and carries the shared envelope shape", () => {
+    for (const argv of [
+      [...ADD_ARGS, "--channel", "terminal", "--json"],
+      ["list", "--json"],
+      ["show", "sprint", "--json"],
+      ["banner", "--json"],
+      ["dispatch", "--json"],
+      ["fire", "sprint", "--json"],
+      ["ack", "sprint", "--json"],
+      ["remove", "sprint", "--json"],
+    ]) {
+      const envelope = JSON.parse(run(argv));
+      expect(envelope.tool).toBe("nag");
+      expect(envelope.version).toBe(VERSION);
+      expect(typeof envelope.ok).toBe("boolean");
+      expect(typeof envelope.code).toBe("number");
+      expect(typeof envelope.message).toBe("string");
+    }
+  });
+});
+
+describe("exit codes", () => {
+  test("invalid input, not found, and conflict each carry their own code", () => {
+    expect(() => run(["add", "--title", "t", "--message", "m"])).toThrow();
+    try {
+      run(["add", "--title", "t", "--message", "m"]);
+    } catch (error) {
+      expect((error as NagError).code).toBe(2);
+    }
+
+    run([...ADD_ARGS, "--channel", "terminal"]);
+    run(["remove", "sprint"]);
+    try {
+      run(["remove", "sprint"]);
+    } catch (error) {
+      expect((error as NagError).code).toBe(1);
+    }
+
+    run([...ADD_ARGS, "--channel", "terminal"]);
+    try {
+      run([...ADD_ARGS, "--channel", "terminal"]);
+    } catch (error) {
+      expect((error as NagError).code).toBe(3);
+    }
+  });
+
+  test("success carries exit code 0 in the JSON envelope", () => {
+    const envelope = JSON.parse(run(["list", "--json"]));
+    expect(envelope.code).toBe(0);
   });
 });
