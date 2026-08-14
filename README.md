@@ -50,11 +50,13 @@ nag fire pay-invoice      # fire once now, ignoring the schedule
 
 ## Channels
 
-A reminder can use any mix of three channels, and uses all three by default.
+A reminder can use either of two channels, and uses both by default.
 
-- `dialog` is a blocking AppleScript dialog with `Remind me later`, `I have handled it`, and `Open` when a page is attached. This is the part that is hard to ignore.
-- `notification` is a macOS notification with a sound, fired alongside the dialog.
-- `terminal` is a red banner printed in every new shell while the reminder is pending.
+- `dialog` is a loud AppleScript alert with a single button. It is hard to ignore. It does not write
+  state: clearing a reminder is always `nag ack <id>`, so a dialog left on screen can never hold up
+  another reminder and can never resurrect one you already removed.
+- `terminal` is a red banner printed in every new shell while the reminder is pending. It needs no
+  permission and works over `ssh`.
 
 ```sh
 nag add --id review --title "Review the pull request" --message "It is blocking the release." --channel dialog,terminal
@@ -82,16 +84,25 @@ An AppleScript `display dialog` inside a `tell application "System Events"` bloc
 ## Layout
 
 ```
-src/reminder.ts   the type, durations, and whether a reminder is due
-src/store.ts      paths, read, write, and list under ~/.nag
-src/deliver.ts    AppleScript dialog and notification
-src/banner.ts     terminal banner text
-src/dispatch.ts   the due loop, locks, and what each button does
-src/install.ts    the launchd plist and the ~/.zshrc line
-src/cli.ts        argument parsing
+src/cli.ts             argument parsing and the only process exit. Pinned path, launchd names it
+src/invocation/        argv to a request, command to handler, help text
+src/obligation/        the reminder record, the id rule, the schedule, the pure state transitions
+src/ledger/            paths, atomic writes, tolerant reads under ~/.nag
+src/alert/             the AppleScript text, the Screen port, and the delivery outcome
+src/dispatch/          the pure due-sweep plan and the executor that runs it
+src/banner/            terminal banner text
+src/installation/      the launchd plist and the ~/.zshrc line
+src/result/            the exit-code table, the JSON envelope, the human prose
 ```
 
-Delivery is injected into `dispatch`, so the whole due loop is tested without a dialog ever appearing.
+Delivery is injected into `dispatch` through the `Screen` port, so the whole due loop is tested without a
+dialog ever appearing. Every decision is a pure function taking `now` as a parameter, so the suite needs no
+clock, no disk and no `osascript`.
+
+**Navigation rule.** Start from the command name. `src/invocation/route.ts` maps every command to exactly one
+exported function in exactly one domain folder, so one file read tells you where a feature lives. Inside a
+folder the pure rules sit in files named after the concept, and the single file that touches the world is
+named after the boundary it crosses.
 
 ## Tests
 
