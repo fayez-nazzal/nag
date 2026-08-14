@@ -46,6 +46,11 @@ describe("global flags", () => {
   test("rejects an unknown command", () => {
     expect(() => run(["explode"])).toThrow(/Unknown command/);
   });
+
+  test("keeps plain output when --json is an argument value and not the flag", () => {
+    const output = run(["list", "--", "--json"]);
+    expect(output.startsWith("{")).toBe(false);
+  });
 });
 
 describe("add", () => {

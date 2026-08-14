@@ -279,10 +279,14 @@ function runEnvelope(argv: string[], now: Date): Envelope {
   return envelope;
 }
 
+function readJsonFlag(argv: string[]): boolean {
+  return parse(argv).values.json === true;
+}
+
 export function run(argv: string[]): string {
   const envelope = runEnvelope(argv, new Date());
   let output = envelope.message;
-  if (argv.includes("--json")) {
+  if (readJsonFlag(argv)) {
     output = JSON.stringify(envelope);
   }
   return output;
@@ -291,9 +295,10 @@ export function run(argv: string[]): string {
 if (import.meta.main) {
   const now = new Date();
   const argv = process.argv.slice(2);
-  const wantsJson = argv.includes("--json");
+  let wantsJson = false;
   let exitCode: ExitCode = EXIT_CODE.ok;
   try {
+    wantsJson = readJsonFlag(argv);
     const envelope = runEnvelope(argv, now);
     exitCode = envelope.code;
     if (wantsJson) {
