@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ALL_CHANNELS, type Reminder } from "../src/reminder.ts";
@@ -87,5 +87,19 @@ describe("store", () => {
     expect(lines).toHaveLength(2);
     expect(lines[0]).toContain("fire alpha");
     expect(lines[0]).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+});
+
+describe("path traversal guard", () => {
+  test("reminderPath rejects an id that would escape the reminders directory", () => {
+    expect(() => reminderPath("../../../tmp/x")).toThrow(/Invalid id/);
+  });
+
+  test("removeReminder never touches a file outside the reminders directory", () => {
+    const sentinel = join(home, "..", "sentinel-should-survive");
+    writeFileSync(sentinel, "keep me");
+    expect(() => removeReminder("../sentinel-should-survive")).toThrow(/Invalid id/);
+    expect(readFileSync(sentinel, "utf8")).toBe("keep me");
+    rmSync(sentinel, { force: true });
   });
 });

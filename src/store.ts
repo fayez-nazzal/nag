@@ -1,6 +1,7 @@
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { validateId } from "./reminder.ts";
 import type { Reminder } from "./reminder.ts";
 
 export function rootDir(): string {
@@ -29,7 +30,7 @@ export function logPath(): string {
 }
 
 export function reminderPath(id: string): string {
-  return join(remindersDir(), `${id}.json`);
+  return join(remindersDir(), `${validateId(id)}.json`);
 }
 
 export function lockPath(id: string): string {
