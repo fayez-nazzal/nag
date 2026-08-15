@@ -1,5 +1,7 @@
 # nag
 
+[![CI](https://github.com/fayez-nazzal/nag/actions/workflows/ci.yml/badge.svg)](https://github.com/fayez-nazzal/nag/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Reminders on macOS that keep coming back until you deal with them, and survive a reboot.
 
 A reminder is one JSON file under `~/.nag/reminders`. A single `launchd` agent wakes on a fixed interval, fires whatever is due, and starts again at login. A reminder stops only when you acknowledge it.
@@ -31,6 +33,51 @@ If `nag` is not found, add the Bun bin directory to your `PATH`:
 ```sh
 echo 'export PATH="$HOME/.bun/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 ```
+
+## Use it with your AI agent
+
+`nag` is built to be driven by an AI coding agent. The bundled skill teaches the agent when to reach for `nag` and how to call it.
+
+One command sets it up.
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/fayez-nazzal/nag/main/scripts/install-skill.sh | bash
+```
+
+It asks which agents to set up. The default is Claude Code.
+
+For scripts and CI there is a non-interactive form.
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/fayez-nazzal/nag/main/scripts/install-skill.sh | bash -s -- --agents claude -y
+```
+
+- `--agents` accepts `claude`, `codex`, `cursor`, `opencode`, `grok`, `antigravity` or `all`.
+- `--scope user` installs for every project instead of just this one.
+
+### Claude Code plugin
+
+Claude Code users can instead install the whole repo as a plugin.
+
+```sh
+/plugin marketplace add fayez-nazzal/nag
+/plugin install nag
+```
+
+### Supported agents
+
+Project scope paths.
+
+| Agent | Skill path |
+|---|---|
+| Claude Code | `.claude/skills/nag/` |
+| OpenAI Codex CLI | `.agents/skills/nag/` |
+| Cursor | `.cursor/skills/nag/` |
+| opencode | `.opencode/skills/nag/` |
+| xAI Grok CLI | `.grok/skills/nag/` |
+| Google Antigravity | `.agents/skills/nag/` |
+
+Read [`AGENTS.md`](AGENTS.md) for the full recipes.
 
 ## The smallest useful command
 
@@ -174,6 +221,10 @@ Delivery is injected into `dispatch` through the `Screen` port, so the whole due
 bun test
 ```
 
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md). To report a security issue see [`SECURITY.md`](SECURITY.md).
+
 ## License
 
-MIT. See `LICENSE`.
+MIT. See [`LICENSE`](LICENSE).
