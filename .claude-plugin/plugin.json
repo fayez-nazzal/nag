@@ -1,6 +1,6 @@
 {
   "name": "nag",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A CLI tool for AI coding agents. Persistent macOS reminders that keep coming back until you acknowledge them, and survive a reboot.",
   "author": {
     "name": "Fayez Nazzal"

@@ -5,7 +5,7 @@ license: MIT
 compatibility: macOS only, needs the `nag` CLI on `PATH`, uses `osascript` and `launchctl`
 metadata:
   author: Fayez Nazzal
-  version: "0.2.0"
+  version: "0.2.1"
 ---
 
 # nag
