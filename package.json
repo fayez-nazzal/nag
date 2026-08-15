@@ -1,6 +1,6 @@
 {
-  "name": "nag",
-  "version": "0.1.0",
+  "name": "@fayeznazzal/nag",
+  "version": "0.1.1",
   "description": "Persistent reminders that keep coming back until you acknowledge them, and survive a reboot.",
   "type": "module",
   "bin": {
@@ -15,5 +15,8 @@
   },
   "devDependencies": {
     "@types/bun": "latest"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
