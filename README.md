@@ -4,6 +4,8 @@ Reminders on macOS that keep coming back until you deal with them, and survive a
 
 A reminder is one JSON file under `~/.nag/reminders`. A single `launchd` agent wakes on a fixed interval, fires whatever is due, and starts again at login. A reminder stops only when you acknowledge it.
 
+`nag` is built to be called by an AI coding agent, not only by a person at a prompt. Every command prints one JSON envelope with `--json` and returns one of seven documented exit codes, so an agent can set a reminder and verify it landed without reading prose. Agents should read [`AGENTS.md`](AGENTS.md) for the recipes, the golden rules and the traps.
+
 ## Requirements
 
 - macOS. Everything visible goes through `osascript` and `launchctl`.

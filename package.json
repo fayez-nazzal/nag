@@ -1,7 +1,25 @@
 {
   "name": "@fayeznazzal/nag",
-  "version": "0.1.1",
-  "description": "Persistent reminders that keep coming back until you acknowledge them, and survive a reboot.",
+  "version": "0.2.0",
+  "description": "A CLI tool for AI coding agents. Persistent macOS reminders that keep coming back until you acknowledge them, and survive a reboot.",
+  "keywords": [
+    "ai-agents",
+    "agent-tools",
+    "claude-code",
+    "codex",
+    "antigravity",
+    "grok-cli",
+    "cursor",
+    "opencode",
+    "agentic",
+    "cli",
+    "reminders",
+    "launchd",
+    "macos",
+    "nag",
+    "notifications",
+    "json-envelope"
+  ],
   "type": "module",
   "bin": {
     "nag": "src/cli.ts"

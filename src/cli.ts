@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { parseArgs } from "node:util";
+import packageJson from "../package.json";
 import { renderBanner } from "@nag/banner/banner.ts";
 import { dispatch, fireReminder } from "@nag/dispatch/run.ts";
 import { DEFAULT_DISPATCH_INTERVAL_SECONDS, runInstall, runUninstall } from "@nag/installation/apply.ts";
@@ -19,7 +20,7 @@ import {
 import { buildEnvelope, EXIT_CODE, NagError, type Envelope, type ExitCode } from "@nag/result/envelope.ts";
 import { listReminders, loadReminder, removeReminder, saveReminder } from "@nag/ledger/records.ts";
 
-export const VERSION = "0.1.0";
+export const VERSION = packageJson.version;
 
 export const COMMAND_NAMES = [
   "add",

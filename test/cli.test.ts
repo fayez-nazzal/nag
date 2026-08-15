@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { VERSION, run } from "../src/cli.ts";
+import packageJson from "../package.json";
 import type { NagError } from "../src/result/envelope.ts";
 import { loadReminder } from "../src/ledger/records.ts";
 
@@ -37,6 +38,10 @@ afterEach(() => {
 describe("global flags", () => {
   test("prints the version", () => {
     expect(run(["--version"])).toBe(VERSION);
+  });
+
+  test("VERSION comes from package.json", () => {
+    expect(VERSION).toBe(packageJson.version);
   });
 
   test("prints help with no command", () => {
